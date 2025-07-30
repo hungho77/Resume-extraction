@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Resume Parser - Server Startup Script with Qwen3-30B-A3B-Instruct-2507-FP8
+# Resume Parser - Server Startup Script with Qwen3-8B
 # This script starts both the vLLM server and the API server
 
 set -e
@@ -36,13 +36,13 @@ if ! command -v python3 &> /dev/null; then
 fi
 
 # Check if required files exist
-if [ ! -f "vllm_server.py" ]; then
-    print_error "vllm_server.py not found"
+if [ ! -f "scripts/vllm_server.py" ]; then
+    print_error "scripts/vllm_server.py not found"
     exit 1
 fi
 
-if [ ! -f "api_server.py" ]; then
-    print_error "api_server.py not found"
+if [ ! -f "src/api/server.py" ]; then
+    print_error "src/api/server.py not found"
     exit 1
 fi
 
@@ -70,7 +70,7 @@ kill_port() {
 # Parse command line arguments
 VLLM_PORT=8000
 API_PORT=8080
-MODEL="Qwen/Qwen3-30B-A3B-Instruct-2507-FP8"
+MODEL="Qwen/Qwen3-8B"
 VLLM_ONLY=false
 API_ONLY=false
 BACKGROUND=false
@@ -141,21 +141,21 @@ if [ "$API_ONLY" = false ]; then
     print_warning "This is a large model with 30.5B parameters - ensure you have adequate GPU resources"
     
     if [ "$BACKGROUND" = true ]; then
-        python3 vllm_server.py --model "$MODEL" --port $VLLM_PORT &
+        python3 scripts/vllm_server.py --model "$MODEL" --port $VLLM_PORT &
         VLLM_PID=$!
         print_success "vLLM server started in background (PID: $VLLM_PID)"
     else
         if [ "$VLLM_ONLY" = true ]; then
             print_status "Starting vLLM server only..."
-            python3 vllm_server.py --model "$MODEL" --port $VLLM_PORT
+            python3 scripts/vllm_server.py --model "$MODEL" --port $VLLM_PORT
         else
             # Start vLLM in background for combined mode
-            python3 vllm_server.py --model "$MODEL" --port $VLLM_PORT &
+            python3 scripts/vllm_server.py --model "$MODEL" --port $VLLM_PORT &
             VLLM_PID=$!
             print_success "vLLM server started in background (PID: $VLLM_PID)"
             
-            # Wait for vLLM to start (longer for Qwen3-30B model)
-            print_status "Waiting for vLLM server to start (this may take 60-120 seconds for Qwen3-30B-A3B-Instruct-2507-FP8)..."
+            # Wait for vLLM to start
+            print_status "Waiting for vLLM server to start (this may take 30-60 seconds for Qwen3-8B)..."
             sleep 60
             
             # Test vLLM connection with retries
@@ -198,17 +198,17 @@ if [ "$VLLM_ONLY" = false ]; then
     print_status "Starting API server on port $API_PORT"
     
     if [ "$BACKGROUND" = true ]; then
-        python3 api_server.py &
+        python3 -m src.api.server &
         API_PID=$!
         print_success "API server started in background (PID: $API_PID)"
     else
         if [ "$API_ONLY" = true ]; then
             print_status "Starting API server only..."
-            python3 api_server.py
+            python3 -m src.api.server
         else
             # Start API server in foreground
             print_status "Starting API server..."
-            python3 api_server.py
+            python3 -m src.api.server
         fi
     fi
 fi
@@ -232,10 +232,9 @@ if [ "$BACKGROUND" = true ]; then
     echo "  API:  curl http://localhost:$API_PORT/health"
     echo ""
     print_status "To test the system:"
-    echo "  python test_qwen_resume.py"
-    echo "  python main.py --check-vllm"
+    echo "  python tests/test_qwen_resume.py"
+    echo "  python scripts/main.py --check-vllm"
 fi
 
 print_success "Setup complete!"
-print_status "Remember: Qwen3-30B-A3B-Instruct-2507-FP8 requires significant GPU resources. Monitor with 'nvidia-smi'"
-print_status "This model uses FP8 quantization for better performance and memory efficiency" 
+print_status "Remember: Qwen3-8B requires ~16GB VRAM for best performance. Monitor with 'nvidia-smi'" 

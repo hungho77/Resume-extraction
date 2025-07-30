@@ -11,9 +11,9 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-from document_processor import ResumeDocumentProcessor
-from llm_client import ResumeLLMProcessor, VLLMClient
-from config import vllm_config, app_config
+from src.core.document_processor import ResumeDocumentProcessor
+from src.core.llm_client import ResumeLLMProcessor, VLLMClient
+from src.core.config import vllm_config, app_config
 
 def print_results(results: Dict[str, Any], filename: str):
     """Pretty print the parsing results"""

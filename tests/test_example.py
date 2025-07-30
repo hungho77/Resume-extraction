@@ -9,8 +9,8 @@ import tempfile
 import os
 from pathlib import Path
 
-from document_processor import ResumeDocumentProcessor
-from llm_client import ResumeLLMProcessor, VLLMClient
+from src.core.document_processor import ResumeDocumentProcessor
+from src.core.llm_client import ResumeLLMProcessor, VLLMClient
 
 def create_sample_resume():
     """Create a sample resume text for testing"""

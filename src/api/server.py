@@ -10,9 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from loguru import logger
 
-from document_processor import ResumeDocumentProcessor
-from llm_client import ResumeLLMProcessor
-from config import app_config
+from src.core.document_processor import ResumeDocumentProcessor
+from src.core.llm_client import ResumeLLMProcessor
+from src.core.config import app_config
 
 # Initialize FastAPI app
 app = FastAPI(

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 vLLM Server Script for Resume Parser
-Starts a vLLM server to host Qwen3-30B-A3B-Instruct-2507-FP8 model for document processing.
+Starts a vLLM server to host Qwen3-8B model for document processing.
 """
 
 import os
@@ -14,27 +14,43 @@ from vllm.entrypoints.openai.api_server import create_app
 from vllm.usage.usage_lib import UsageContext
 import uvicorn
 
-from config import vllm_config
+# If you have a config.py, import vllm_config from there, else set model_name directly below
+try:
+    from src.core.config import vllm_config
+    MODEL_NAME = vllm_config.model_name or "Qwen/Qwen3-8B"
+    MAX_MODEL_LEN = getattr(vllm_config, 'max_model_len', 32768)
+    GPU_MEMORY_UTILIZATION = getattr(vllm_config, 'gpu_memory_utilization', 0.7)
+    TENSOR_PARALLEL_SIZE = getattr(vllm_config, 'tensor_parallel_size', 1)
+    TRUST_REMOTE_CODE = getattr(vllm_config, 'trust_remote_code', True)
+    HOST = getattr(vllm_config, 'host', 'localhost')
+    PORT = getattr(vllm_config, 'port', 8000)
+except ImportError:
+    MODEL_NAME = "Qwen/Qwen3-8B"
+    MAX_MODEL_LEN = 32768
+    GPU_MEMORY_UTILIZATION = 0.7
+    TENSOR_PARALLEL_SIZE = 1
+    TRUST_REMOTE_CODE = True
+    HOST = "localhost"
+    PORT = 8000
 
 def create_vllm_engine():
-    """Create vLLM engine with Qwen3-30B-A3B-Instruct-2507-FP8 configuration"""
+    """Create vLLM engine with Qwen3-8B configuration"""
     engine_args = AsyncEngineArgs(
-        model="Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",  # Using Qwen3-30B model
-        trust_remote_code=vllm_config.trust_remote_code,
-        tensor_parallel_size=vllm_config.tensor_parallel_size,
-        max_model_len=vllm_config.max_model_len,
-        gpu_memory_utilization=vllm_config.gpu_memory_utilization,
+        model=MODEL_NAME,  # Use Qwen3-8B
+        trust_remote_code=TRUST_REMOTE_CODE,
+        tensor_parallel_size=TENSOR_PARALLEL_SIZE,
+        max_model_len=MAX_MODEL_LEN,
+        gpu_memory_utilization=GPU_MEMORY_UTILIZATION,
         enforce_eager=True,  # For better compatibility
         disable_log_stats=True,
     )
-    
     return AsyncLLMEngine.from_engine_args(engine_args)
 
 def start_vllm_server():
-    """Start vLLM server with Qwen3-30B-A3B-Instruct-2507-FP8"""
-    print(f"Starting vLLM server with model: Qwen/Qwen3-30B-A3B-Instruct-2507-FP8")
-    print(f"Server will be available at: http://{vllm_config.host}:{vllm_config.port}")
-    print(f"Note: This model requires significant GPU memory (24GB+ VRAM recommended)")
+    """Start vLLM server with Qwen3-8B"""
+    print(f"Starting vLLM server with model: {MODEL_NAME}")
+    print(f"Server will be available at: http://{HOST}:{PORT}")
+    print(f"Note: Qwen3-8B requires ~16GB VRAM for best performance.")
     
     # Create engine
     engine = create_vllm_engine()
@@ -42,30 +58,30 @@ def start_vllm_server():
     # Create FastAPI app
     app = create_app(
         engine=engine,
-        served_model_names=["Qwen/Qwen3-30B-A3B-Instruct-2507-FP8"],
+        served_model_names=[MODEL_NAME],
         usage_context=UsageContext.OPENAI_API_SERVER,
     )
     
     # Start server
     uvicorn.run(
         app,
-        host=vllm_config.host,
-        port=vllm_config.port,
+        host=HOST,
+        port=PORT,
         log_level="info"
     )
 
 def test_model():
-    """Test the Qwen3-30B-A3B-Instruct-2507-FP8 model with a simple prompt"""
-    print("Testing Qwen3-30B-A3B-Instruct-2507-FP8 model...")
+    """Test the Qwen3-8B model with a simple prompt"""
+    print(f"Testing {MODEL_NAME} model...")
     
     try:
         # Initialize model
         llm = LLM(
-            model="Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
-            trust_remote_code=vllm_config.trust_remote_code,
-            tensor_parallel_size=vllm_config.tensor_parallel_size,
-            max_model_len=vllm_config.max_model_len,
-            gpu_memory_utilization=vllm_config.gpu_memory_utilization,
+            model=MODEL_NAME,
+            trust_remote_code=TRUST_REMOTE_CODE,
+            tensor_parallel_size=TENSOR_PARALLEL_SIZE,
+            max_model_len=MAX_MODEL_LEN,
+            gpu_memory_utilization=GPU_MEMORY_UTILIZATION,
         )
         
         # Test prompt for resume extraction
@@ -97,7 +113,7 @@ Extract the name and email from this text: John Doe, Software Engineer, john.doe
     return True
 
 def main():
-    parser = argparse.ArgumentParser(description="vLLM Server for Resume Parser with Qwen3-30B-A3B-Instruct-2507-FP8")
+    parser = argparse.ArgumentParser(description="vLLM Server for Resume Parser with Qwen3-8B")
     parser.add_argument(
         "--test",
         action="store_true",
@@ -106,8 +122,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
-        help="Model name to use (default: Qwen/Qwen3-30B-A3B-Instruct-2507-FP8)"
+        default=MODEL_NAME,
+        help="Model name to use (default: Qwen/Qwen3-8B)"
     )
     parser.add_argument(
         "--host",
@@ -123,12 +139,13 @@ def main():
     args = parser.parse_args()
     
     # Override config with command line arguments
+    global MODEL_NAME, HOST, PORT
     if args.model:
-        vllm_config.model_name = args.model
+        MODEL_NAME = args.model
     if args.host:
-        vllm_config.host = args.host
+        HOST = args.host
     if args.port:
-        vllm_config.port = args.port
+        PORT = args.port
     
     if args.test:
         success = test_model()

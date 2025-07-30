@@ -42,7 +42,7 @@ def example_basic_usage():
     print("📄 Example 1: Basic Document Processing")
     print("-" * 40)
     
-    from document_processor import ResumeDocumentProcessor
+    from src.core.document_processor import ResumeDocumentProcessor
     
     # Create a temporary file with sample resume
     sample_text = create_simple_resume()
@@ -74,8 +74,8 @@ def example_with_llm():
     print("\n🤖 Example 2: Processing with LLM Enhancement")
     print("-" * 40)
     
-    from document_processor import ResumeDocumentProcessor
-    from llm_client import ResumeLLMProcessor
+    from src.core.document_processor import ResumeDocumentProcessor
+    from src.core.llm_client import ResumeLLMProcessor
     
     # Create a temporary file with sample resume
     sample_text = create_simple_resume()
