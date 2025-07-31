@@ -2,8 +2,15 @@
 Core modules for resume parsing functionality.
 """
 
-from .config import *
-from .document_processor import *
-from .client import *
+from .config import docling_config
+from .document_processor import DocumentConverter, ResumeDocumentProcessor
+from .client import SmolDocLingClient, LLMClient, ResumeProcessor
 
-__all__ = ['config', 'document_processor', 'client'] 
+__all__ = [
+    "docling_config",
+    "DocumentConverter",
+    "ResumeDocumentProcessor",
+    "SmolDocLingClient",
+    "LLMClient",
+    "ResumeProcessor",
+]

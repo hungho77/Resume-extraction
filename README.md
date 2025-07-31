@@ -12,6 +12,7 @@ A high-performance resume parsing system that extracts structured information fr
 - **🌐 REST API**: Easy-to-use FastAPI endpoints for integration
 - **🔄 Batch Processing**: Process multiple resumes simultaneously
 - **⚙️ Environment Configuration**: Easy setup with .env file
+- **💻 PDF Inference Engine**: Advanced PDF processing with code extraction and table parsing
 
 ## 📋 Extracted Information
 
@@ -62,8 +63,6 @@ python scripts/test_setup.py
 ### 1. Configure Environment
 
 ```bash
-# Copy the example environment file
-cp env.example .env
 
 # Edit .env file with your configuration
 # For vLLM: Set LLM_BASE_URL to your vLLM server (no API key needed)
@@ -127,6 +126,29 @@ result = processor.process_document("path/to/resume.pdf")
 print(f"Name: {result['personal_info']['name']}")
 print(f"Email: {result['personal_info']['email']}")
 print(f"Skills: {result['skills']}")
+```
+
+### Advanced PDF Inference
+
+```python
+from src.core.pdf_inference import PDFInferenceEngine
+
+# Initialize PDF inference engine
+engine = PDFInferenceEngine()
+
+# Process PDF with advanced features
+result = engine.process_pdf(
+    "path/to/resume.pdf",
+    use_llm=True,
+    extract_code=True,
+    extract_tables=True
+)
+
+# Access enhanced information
+print(f"Technical Skills: {result['technical_skills']}")
+print(f"Code Blocks: {len(result['code_blocks'])}")
+print(f"Tables: {len(result['tables'])}")
+print(f"LLM Summary: {result['llm_summary']}")
 ```
 
 ### Using the LLM Enhancement
@@ -339,18 +361,20 @@ Resume-extraction/
 ├── src/
 │   ├── core/
 │   │   ├── document_processor.py  # Document processing with DocLing
-│   │   ├── llm_client.py         # LLM integration with vLLM
-│   │   └── config.py             # Configuration management
+│   │   ├── client.py              # LLM integration with vLLM
+│   │   ├── pdf_inference.py       # Advanced PDF processing
+│   │   └── config.py              # Configuration management
 │   ├── api/
-│   │   └── server.py             # FastAPI REST server
-│   └── utils/                    # Utility functions
+│   │   └── server.py              # FastAPI REST server
+│   └── utils/                     # Utility functions
 ├── scripts/
-│   ├── start_server.sh           # vLLM server startup
-│   ├── main.py                   # CLI interface
-│   └── test_setup.py            # Installation verification
-├── tests/                        # Test suite
-├── docs/                         # Documentation
-└── requirements.txt              # Dependencies
+│   ├── start_server.sh            # vLLM server startup
+│   ├── main.py                    # CLI interface
+│   ├── pdf_inference_demo.py      # PDF inference demo
+│   └── test_setup.py             # Installation verification
+├── tests/                         # Test suite
+├── docs/                          # Documentation
+└── requirements.txt               # Dependencies
 ```
 
 ## 🤝 Contributing

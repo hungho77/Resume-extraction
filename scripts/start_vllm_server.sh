@@ -21,7 +21,7 @@ print_warning() {
 print_error() {
     printf "[ERROR] %s\n" "$1"
 }
-``
+
 # Default configuration
 MODEL_NAME=${MODEL_NAME:-"Qwen/Qwen3-8B"}
 TENSOR_PARALLEL_SIZE=${TENSOR_PARALLEL_SIZE:-2}
@@ -234,6 +234,7 @@ show_usage() {
     printf "  --gpu-devices DEVICES     Specific GPU devices to use (e.g., '1,0' for GPU 1 first, sets CUDA_VISIBLE_DEVICES)\n"
     printf "  --help                    Show this help message\n"
     printf "\n"
+
     printf "Environment variables:\n"
     printf "  MODEL_NAME                Model name\n"
     printf "  TENSOR_PARALLEL_SIZE     Number of GPUs\n"

@@ -1,17 +1,18 @@
-# Core dependencies for Qwen3-30B-A3B-Instruct-2507-FP8
+# Core dependencies for Qwen3-8B
 torch>=2.0.0
 transformers>=4.51.0
 vllm>=0.8.5
 accelerate>=0.25.0
 
-# Document processing with DocLing and OCR
+# Document processing with DocLing
 docling>=0.1.0
 python-docx>=0.8.11
 Pillow>=9.5.0
 
-# OCR support for DocLing
-pytesseract>=0.3.10
-opencv-python>=4.8.0
+# SmolDocLing VLM for OCR
+docling-core>=2.44.0
+transformers>=4.54.0
+PyMuPDF>=1.26.0
 
 # Data processing
 pandas>=1.5.0
@@ -29,25 +30,12 @@ requests>=2.31.0
 tqdm>=4.65.0
 loguru>=0.7.0
 
-# Additional dependencies for Qwen3-30B
+# Additional dependencies for Qwen3-8B
 sentencepiece>=0.1.99
 protobuf>=3.20.0
 
-# PDF processing fallback
-pypdf>=5.0.0
-
-# OCR processing
-PyMuPDF>=1.26.0
-easyocr>=1.7.0
-opencv-python>=4.8.0
-
 # LLM providers
 openai>=1.0.0
-
-# SmolDocLing dependencies
-docling-core>=2.44.0
-transformers>=4.54.0
-torch>=2.0.0
 
 # Environment configuration
 python-dotenv>=1.0.0 
