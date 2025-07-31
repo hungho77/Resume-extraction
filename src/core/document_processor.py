@@ -7,11 +7,39 @@ import logging
 
 import torch
 import pandas as pd
-from docling import DocumentProcessor
+from docling.document_converter import DocumentConverter
 from docx import Document
 from PIL import Image
 
-from config import docling_config
+# Fallback PDF processing
+try:
+    from pypdf import PdfReader
+    PYPDF_AVAILABLE = True
+except ImportError:
+    PYPDF_AVAILABLE = False
+
+# OCR processing
+try:
+    import easyocr
+    import cv2
+    import numpy as np
+    from PIL import Image
+    EASYOCR_AVAILABLE = True
+except ImportError:
+    EASYOCR_AVAILABLE = False
+
+# SmolDocLing imports
+try:
+    import torch
+    from transformers import AutoProcessor, AutoModelForVision2Seq
+    from transformers.image_utils import load_image
+    from docling_core.types.doc import DoclingDocument
+    from docling_core.types.doc.document import DocTagsDocument
+    SMOLDOCLING_AVAILABLE = True
+except ImportError:
+    SMOLDOCLING_AVAILABLE = False
+
+from .config import docling_config
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +47,7 @@ class ResumeDocumentProcessor:
     """Enhanced document processor for resume parsing using DocLing with OCR"""
     
     def __init__(self):
-        self.processor = DocumentProcessor()
-        self.device = docling_config.device
+        self.converter = DocumentConverter()
         self.use_ocr = docling_config.use_ocr
         self.ocr_language = docling_config.ocr_language
         
@@ -32,28 +59,192 @@ class ResumeDocumentProcessor:
             # Use DocLing for PDF processing with OCR
             logger.info("Using DocLing for PDF extraction with OCR")
             
-            # Process document with DocLing
-            doc_result = self.processor.process(file_path)
+            # Convert document with DocLing
+            conversion_result = self.converter.convert(file_path)
             
             # Extract text from DocLing result
-            if hasattr(doc_result, 'text'):
-                text = doc_result.text
-            elif hasattr(doc_result, 'content'):
-                text = doc_result.content
-            elif isinstance(doc_result, dict):
-                text = doc_result.get('text', '')
+            if hasattr(conversion_result, 'text'):
+                text = conversion_result.text
+            elif hasattr(conversion_result, 'content'):
+                text = conversion_result.content
+            elif hasattr(conversion_result, 'pages'):
+                # Extract text from all pages
+                text = "\n".join([page.text for page in conversion_result.pages if hasattr(page, 'text')])
+            elif isinstance(conversion_result, dict):
+                text = conversion_result.get('text', '')
             else:
                 # Fallback: try to get text from the document object
-                text = str(doc_result)
+                text = str(conversion_result)
             
             logger.info("DocLing PDF extraction successful")
             
         except Exception as e:
             logger.error(f"DocLing PDF extraction failed: {e}")
-            # Return empty text if extraction fails
             text = ""
         
+        # If DocLing failed or returned empty text, try fallback
+        if not text.strip():
+            logger.info("DocLing returned empty text, trying fallback PDF extraction with pypdf...")
+            text = self.extract_text_from_pdf_fallback(file_path)
+            if text:
+                logger.info("Fallback PDF extraction successful")
+            else:
+                logger.info("pypdf fallback failed, trying EasyOCR extraction...")
+                text = self.extract_text_from_pdf_ocr(file_path)
+                if text:
+                    logger.info("EasyOCR PDF extraction successful")
+                else:
+                    logger.info("EasyOCR failed, trying SmolDocLing extraction...")
+                    text = self.extract_text_from_pdf_smoldocling(file_path)
+                    if text:
+                        logger.info("SmolDocLing PDF extraction successful")
+                    else:
+                        logger.error("All PDF extraction methods failed")
+        
         return text.strip()
+    
+    def extract_text_from_pdf_fallback(self, file_path: str) -> str:
+        """Fallback PDF text extraction using pypdf"""
+        if not PYPDF_AVAILABLE:
+            return ""
+        
+        try:
+            text = ""
+            with open(file_path, 'rb') as file:
+                pdf_reader = PdfReader(file)
+                for page in pdf_reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+            
+            return text.strip()
+        except Exception as e:
+            logger.error(f"Fallback PDF extraction failed: {e}")
+            return ""
+    
+    def extract_text_from_pdf_ocr(self, file_path: str) -> str:
+        """Extract text from PDF using OCR (EasyOCR)"""
+        if not EASYOCR_AVAILABLE:
+            return ""
+        
+        try:
+            import fitz  # PyMuPDF
+            import easyocr
+            
+            # Initialize EasyOCR
+            reader = easyocr.Reader(['en'])
+            
+            # Open PDF with PyMuPDF
+            doc = fitz.open(file_path)
+            text = ""
+            
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                
+                # Convert page to image
+                pix = page.get_pixmap()
+                img_data = pix.tobytes("png")
+                
+                # Convert to OpenCV format
+                nparr = np.frombuffer(img_data, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                
+                # Perform OCR
+                results = reader.readtext(img)
+                
+                # Extract text from results
+                page_text = " ".join([result[1] for result in results])
+                text += page_text + "\n"
+            
+            doc.close()
+            return text.strip()
+            
+        except ImportError:
+            logger.warning("PyMuPDF not available for OCR processing")
+            return ""
+        except Exception as e:
+            logger.error(f"OCR PDF extraction failed: {e}")
+            return ""
+    
+    def extract_text_from_pdf_smoldocling(self, file_path: str) -> str:
+        """Extract text from PDF using SmolDocLing OCR"""
+        if not SMOLDOCLING_AVAILABLE:
+            return ""
+        
+        try:
+            import fitz  # PyMuPDF
+            
+            # Initialize SmolDocLing
+            model_name = "ds4sd/SmolDocling-256M-preview"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            
+            processor = AutoProcessor.from_pretrained(model_name)
+            model = AutoModelForVision2Seq.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16,
+                _attn_implementation="eager",  # Use eager to avoid FlashAttention2 dependency
+            ).to(device)
+            
+            # Open PDF with PyMuPDF
+            doc = fitz.open(file_path)
+            all_text = ""
+            
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                
+                # Convert page to image
+                pix = page.get_pixmap()
+                img_data = pix.tobytes("png")
+                
+                # Save temporary image
+                temp_image_path = f"/tmp/smoldocling_page_{page_num}.png"
+                with open(temp_image_path, "wb") as f:
+                    f.write(img_data)
+                
+                # Load image
+                image = load_image(temp_image_path)
+                
+                # Create input messages
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image"},
+                            {"type": "text", "text": "Convert this page to docling."}
+                        ]
+                    },
+                ]
+                
+                # Prepare inputs
+                prompt = processor.apply_chat_template(messages, add_generation_prompt=True)
+                inputs = processor(text=prompt, images=[image], return_tensors="pt")
+                inputs = inputs.to(device)
+                
+                # Generate outputs
+                generated_ids = model.generate(**inputs, max_new_tokens=8192)
+                prompt_length = inputs.input_ids.shape[1]
+                trimmed_generated_ids = generated_ids[:, prompt_length:]
+                doctags = processor.batch_decode(
+                    trimmed_generated_ids,
+                    skip_special_tokens=False,
+                )[0].lstrip()
+                
+                # Convert to DoclingDocument and extract text
+                doctags_doc = DocTagsDocument.from_doctags_and_image_pairs([doctags], [image])
+                doc_ling = DoclingDocument.load_from_doctags(doctags_doc, document_name="Document")
+                
+                page_text = doc_ling.export_to_markdown()
+                all_text += page_text + "\n\n"
+                
+                # Clean up
+                os.remove(temp_image_path)
+            
+            doc.close()
+            return all_text.strip()
+            
+        except Exception as e:
+            logger.error(f"SmolDocLing PDF extraction failed: {e}")
+            return ""
     
     def extract_text_from_docx(self, file_path: str) -> str:
         """Extract text from DOCX file with enhanced formatting"""
@@ -162,9 +353,6 @@ class ResumeDocumentProcessor:
     def extract_structured_data(self, text: str) -> Dict[str, Any]:
         """Enhanced structured data extraction from resume text"""
         try:
-            # Process text with DocLing
-            processed_data = self.processor.process(text)
-            
             # Extract key information with improved patterns
             structured_data = {
                 'personal_info': self._extract_personal_info(text),

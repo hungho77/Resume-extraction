@@ -32,6 +32,9 @@ ENV/
 .idea/
 *.swp
 *.swo
+
+# JSON files
+*.json
 *~
 
 # OS

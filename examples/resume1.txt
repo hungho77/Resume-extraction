@@ -1,0 +1,11 @@
+JANE SMITH
+Data Scientist
+jane.smith@email.com
+
+EXPERIENCE
+Data Scientist | AI Corp | 2021-2023
+- Built ML models for prediction
+- Analyzed large datasets
+
+SKILLS
+Python, R, TensorFlow, SQL, Pandas

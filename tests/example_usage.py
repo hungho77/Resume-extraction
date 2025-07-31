@@ -7,6 +7,10 @@ Simple demonstration of how to use the document parser.
 import json
 import tempfile
 import os
+import sys
+
+# Add parent directory to Python path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 def create_simple_resume():
     """Create a simple resume for demonstration"""
@@ -75,7 +79,7 @@ def example_with_llm():
     print("-" * 40)
     
     from src.core.document_processor import ResumeDocumentProcessor
-    from src.core.llm_client import ResumeLLMProcessor
+    from src.core.client import ResumeLLMProcessor
     
     # Create a temporary file with sample resume
     sample_text = create_simple_resume()
@@ -89,9 +93,9 @@ def example_with_llm():
         doc_processor = ResumeDocumentProcessor()
         llm_processor = ResumeLLMProcessor()
         
-        # Check if vLLM is available
+        # Check if LLM provider is available
         if not llm_processor.llm_client.health_check():
-            print("⚠️  vLLM server not available, using basic processing only")
+            print("⚠️  LLM provider not available, using basic processing only")
             results = doc_processor.process_document(temp_file)
         else:
             # Process with LLM enhancement
@@ -176,7 +180,7 @@ def example_batch_processing():
     print("\n📁 Example 4: Batch Processing")
     print("-" * 40)
     
-    from document_processor import ResumeDocumentProcessor
+    from src.core.document_processor import ResumeDocumentProcessor
     
     # Create multiple sample resumes
     resumes = [

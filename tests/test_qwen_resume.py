@@ -7,7 +7,11 @@ Demonstrates the improved capabilities with Qwen3-8B model.
 import json
 import tempfile
 import os
+import sys
 from pathlib import Path
+
+# Add parent directory to Python path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.core.document_processor import ResumeDocumentProcessor
 from src.core.llm_client import ResumeLLMProcessor, VLLMClient
