@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class PDFToScannedConverter:
     """Converts readable PDFs to scanned PDFs"""
 
-    def __init__(self, output_dir: str = "../data/SCAN-INFORMATION-TECHNOLOGY"):
+    def __init__(self, output_dir: str = "../../data/SCAN-INFORMATION-TECHNOLOGY"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -235,8 +235,8 @@ def main():
     print("=" * 60)
 
     # Configuration
-    input_directory = "../data/INFORMATION-TECHNOLOGY"
-    output_directory = "../data/SCAN-INFORMATION-TECHNOLOGY"
+    input_directory = "../../data/INFORMATION-TECHNOLOGY"
+    output_directory = "../../data/SCAN-INFORMATION-TECHNOLOGY"
     dpi = 100  # Even lower resolution for smaller file sizes
 
     try:

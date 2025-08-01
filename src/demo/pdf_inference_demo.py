@@ -14,7 +14,7 @@ from typing import Dict, Any
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.document_processor import ResumeDocumentProcessor
+from core.document_processor import ResumeDocumentProcessor
 
 
 def process_pdf_to_json(pdf_path: str, output_path: str = None) -> Dict[str, Any]:

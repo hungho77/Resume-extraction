@@ -190,7 +190,7 @@ start_python_server() {
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     # Use unified server script for both single and multi-GPU
-    python3 "$SCRIPT_DIR/vllm_server.py" \
+    python3 "$SCRIPT_DIR/../api/vllm_server.py" \
         --model "$MODEL_NAME" \
         --tensor-parallel-size "$TENSOR_PARALLEL_SIZE" \
         --max-model-len "$MAX_MODEL_LEN" \
@@ -208,7 +208,7 @@ test_model() {
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     # Use unified server script for both single and multi-GPU
-    python3 "$SCRIPT_DIR/vllm_server.py" \
+    python3 "$SCRIPT_DIR/../api/vllm_server.py" \
         --model "$MODEL_NAME" \
         --tensor-parallel-size "$TENSOR_PARALLEL_SIZE" \
         --max-model-len "$MAX_MODEL_LEN" \

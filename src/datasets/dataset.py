@@ -15,7 +15,7 @@ import logging
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.document_processor import ResumeDocumentProcessor
+from core.document_processor import ResumeDocumentProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -224,7 +224,7 @@ def analyze_information_technology_dataset() -> Dict[str, Any]:
     print("=" * 60)
 
     # Define the dataset path
-    dataset_path = Path("../data/INFORMATION-TECHNOLOGY")
+    dataset_path = Path("../../data/INFORMATION-TECHNOLOGY")
 
     if not dataset_path.exists():
         print(f"❌ Dataset path not found: {dataset_path}")

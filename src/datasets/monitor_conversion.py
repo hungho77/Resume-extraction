@@ -9,8 +9,8 @@ from pathlib import Path
 
 def monitor_conversion():
     """Monitor the conversion progress"""
-    input_dir = Path("../data/INFORMATION-TECHNOLOGY")
-    output_dir = Path("../data/SCAN-INFORMATION-TECHNOLOGY")
+    input_dir = Path("../../data/INFORMATION-TECHNOLOGY")
+    output_dir = Path("../../data/SCAN-INFORMATION-TECHNOLOGY")
 
     total_files = len(list(input_dir.glob("*.pdf")))
 

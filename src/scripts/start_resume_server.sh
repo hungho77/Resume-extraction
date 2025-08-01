@@ -18,7 +18,7 @@ echo "🔌 Port: $PORT"
 echo ""
 
 # Check if we're in the right directory
-if [ ! -f "requirements.txt" ]; then
+if [ ! -f "requirements.txt" ] && [ ! -f "../requirements.txt" ]; then
     echo "❌ Error: Please run this script from the Resume-extraction directory"
     exit 1
 fi
@@ -105,5 +105,4 @@ echo ""
 python3 -m uvicorn src.api.resume_extraction_server:app \
     --host "$HOST" \
     --port "$PORT" \
-    --reload \
     --log-level info 

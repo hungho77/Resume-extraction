@@ -5,7 +5,7 @@ Converts a few PDFs to test the conversion process
 """
 
 from pathlib import Path
-from .convert_to_scanned import PDFToScannedConverter
+from convert_to_scanned import PDFToScannedConverter
 
 
 def main():
@@ -14,8 +14,8 @@ def main():
     print("=" * 60)
 
     # Configuration
-    input_directory = "../data/INFORMATION-TECHNOLOGY"
-    output_directory = "../data/SCAN-INFORMATION-TECHNOLOGY"
+    input_directory = "../../data/INFORMATION-TECHNOLOGY"
+    output_directory = "../../data/SCAN-INFORMATION-TECHNOLOGY"
     dpi = 150  # Lower resolution for smaller file sizes
 
     # Get first 5 PDF files

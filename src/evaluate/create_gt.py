@@ -136,7 +136,7 @@ def parse_resume_text(resume_text: str) -> dict:
 
 
 def create_ground_truth_from_csv(
-    csv_file: str = "../assets/resumes.csv",
+    csv_file: str = "../../assets/resumes.csv",
 ) -> Dict[str, Any]:
     """Create ground truth files from CSV data"""
     print("🔧 Creating Ground Truth Files from CSV")

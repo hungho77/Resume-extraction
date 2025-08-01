@@ -8,7 +8,7 @@ import json
 
 
 def load_evaluation_results(
-    file_path: str = "../results/comprehensive_evaluation_results.json",
+    file_path: str = "../../results/comprehensive_evaluation_results.json",
 ):
     """Load evaluation results from JSON file"""
     try:

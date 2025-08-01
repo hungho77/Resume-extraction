@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ResumeEvaluator:
     """Evaluates resume parsing accuracy against ground truth"""
 
-    def __init__(self, ground_truth_file: str = "../results/ground_truth.json"):
+    def __init__(self, ground_truth_file: str = "../../results/ground_truth.json"):
         self.ground_truth_file = Path(ground_truth_file)
         self.ground_truth = self._parse_ground_truth()
 
@@ -354,7 +354,7 @@ class ResumeEvaluator:
             logger.error(f"Error evaluating {output_file}: {e}")
             return {"file": output_file, "error": str(e), "overall_score": 0.0}
 
-    def evaluate_directory(self, output_dir: str = "../output") -> Dict[str, Any]:
+    def evaluate_directory(self, output_dir: str = "../../output") -> Dict[str, Any]:
         """Evaluate all JSON files in the output directory"""
         output_path = Path(output_dir)
         if not output_path.exists():

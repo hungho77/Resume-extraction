@@ -16,7 +16,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Pass all arguments to the Python script
-python3 demo/pdf_inference_demo.py "$@"
+python3 src/demo/pdf_inference_demo.py "$@"
 
 echo ""
 echo "✅ Demo completed!" 

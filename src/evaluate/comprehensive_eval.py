@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class ComprehensiveEvaluator:
     """Comprehensive resume parser evaluator with advanced metrics"""
 
-    def __init__(self, ground_truth_file: str = "../results/ground_truth.json"):
+    def __init__(self, ground_truth_file: str = "../../results/ground_truth.json"):
         self.ground_truth_file = Path(ground_truth_file)
         self.ground_truth = self._load_ground_truth()
         self.evaluation_history = []
@@ -310,7 +310,7 @@ class ComprehensiveEvaluator:
             logger.error(f"Error evaluating {output_file}: {e}")
             return {"file": output_file, "error": str(e), "overall_score": 0.0}
 
-    def evaluate_directory(self, output_dir: str = "../output") -> Dict[str, Any]:
+    def evaluate_directory(self, output_dir: str = "../../output") -> Dict[str, Any]:
         """Evaluate all JSON files in the output directory with comprehensive analysis"""
         output_path = Path(output_dir)
         if not output_path.exists():
@@ -570,7 +570,7 @@ def main():
     evaluator.print_comprehensive_summary(results)
 
     # Save detailed results
-    output_file = "../results/comprehensive_evaluation_results.json"
+    output_file = "../../results/comprehensive_evaluation_results.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 

@@ -48,11 +48,11 @@ def create_ground_truth_from_csv(csv_path: str):
     print("=" * 60)
     
     # Create GT directory
-    gt_dir = Path("../data/GT")
+    gt_dir = Path("../../data/GT")
     gt_dir.mkdir(parents=True, exist_ok=True)
     
     # Create results directory
-    results_dir = Path("../results")
+    results_dir = Path("../../results")
     results_dir.mkdir(exist_ok=True)
     
     csv_file = Path(csv_path)
@@ -81,8 +81,10 @@ def create_ground_truth_from_csv(csv_path: str):
                 # Parse the resume text using the existing function
                 import sys
                 import os
-                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                from .create_gt import parse_resume_text
+                # Add the evaluate directory to the path
+                evaluate_dir = os.path.dirname(os.path.abspath(__file__))
+                sys.path.insert(0, evaluate_dir)
+                from create_gt import parse_resume_text
                 ground_truth = parse_resume_text(resume_text)
                 
                 # Save individual ground truth file
@@ -123,8 +125,8 @@ def evaluate_outputs_against_ground_truth(outputs_dir: str):
     print("=" * 60)
     
     outputs_path = Path(outputs_dir)
-    gt_dir = Path("../data/GT")
-    results_dir = Path("../results")
+    gt_dir = Path("../../data/GT")
+    results_dir = Path("../../results")
     
     if not outputs_path.exists():
         print(f"❌ Outputs directory not found: {outputs_path}")

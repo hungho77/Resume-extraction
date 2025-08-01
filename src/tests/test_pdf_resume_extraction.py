@@ -27,7 +27,7 @@ def test_pdf_markdown_extraction():
         return False
 
     # Test PDF file path
-    pdf_path = Path("docs/examples_resume.pdf")
+    pdf_path = Path("assets/resume.pdf")
     if not pdf_path.exists():
         print(f"❌ PDF file not found: {pdf_path}")
         return False
