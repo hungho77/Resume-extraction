@@ -1,404 +1,401 @@
-# Resume Parser
+# Resume Parser with DocLing and LLM
 
-A high-performance resume parsing system that extracts structured information from resumes using advanced document processing (DocLing) and Large Language Models (vLLM with Qwen3).
+A comprehensive resume parsing system that combines **DocLing** for document parsing, **SmolDocLing** for OCR on scanned documents, and **LLM** for information extraction. Supports both **local VLM models** and **API key services** for flexible deployment.
 
 ## 🚀 Features
 
-- **📄 Multi-Format Support**: Parse PDF, DOCX, and TXT resume files
-- **🔍 Advanced OCR**: Extract text from scanned documents and images using DocLing and SmolDocLing
-- **🤖 Unified LLM Client**: Single client for vLLM and OpenAI with just different base URLs
-- **⚡ High Performance**: Multi-GPU support with vLLM for fast processing
-- **📊 Structured Output**: Extract personal info, education, experience, skills, and more
-- **🌐 REST API**: Easy-to-use FastAPI endpoints for integration
-- **🔄 Batch Processing**: Process multiple resumes simultaneously
-- **⚙️ Environment Configuration**: Easy setup with .env file
-- **💻 PDF Inference Engine**: Advanced PDF processing with code extraction and table parsing
+- **Multi-format Support**: PDF, DOCX, TXT files
+- **OCR Capability**: Handles scanned documents using SmolDocLing VLM
+- **Flexible LLM Integration**: Local models (vLLM) or cloud APIs (OpenAI, etc.)
+- **Structured Extraction**: Name, email, phone, skills, education, experience, certifications
+- **Evaluation Framework**: Comprehensive metrics and ground truth validation
+- **API Server**: FastAPI-based REST API for production deployment
 
-## 📋 Extracted Information
+## 🏗️ Architecture
 
-The system extracts the following structured data from resumes:
+![Workflow Diagram](assets/workflow.png)
 
-- **Personal Information**: Name, email, phone, location
-- **Education**: Degrees, institutions, graduation dates
-- **Work Experience**: Job titles, companies, dates, responsibilities
-- **Skills**: Technical skills, soft skills, certifications
-- **Summary**: Professional summary and objectives
-- **Key Achievements**: Notable accomplishments and metrics
-- **Contact Information**: Email, phone, LinkedIn, portfolio links
+The workflow below illustrates the end-to-end resume extraction pipeline, from document ingestion (PDF, DOCX, scanned images) through OCR (if needed), document parsing, LLM-based information extraction, and outputting structured JSON results. This modular design enables flexible integration of local or cloud-based models and supports both batch and API-based processing.
 
-## 🛠️ Prerequisites
-
-- **Python 3.8+**
-- **CUDA-compatible GPU(s)** with at least 8GB VRAM (recommended)
-- **vLLM 0.8.5+** for LLM inference
-- **PyTorch** with CUDA support
-
-## 📦 Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd Resume-extraction
-```
-
-### 2. Install Dependencies
-
-```bash
-# Install all requirements
-pip install -r requirements.txt
-
-# Or install the package
-pip install -e .
-```
-
-### 3. Verify Installation
-
-```bash
-python scripts/test_setup.py
-```
-
-## 🚀 Quick Start
-
-### 1. Configure Environment
-
-```bash
-
-# Edit .env file with your configuration
-# For vLLM: Set LLM_BASE_URL to your vLLM server (no API key needed)
-# For OpenAI: Set LLM_BASE_URL to OpenAI API and LLM_API_KEY to your API key
-```
-
-### 2. Start the vLLM Server (Optional)
-
-```bash
-# Start with default settings (2 GPUs)
-./scripts/start_server.sh --cli
-
-# Start with single GPU
-./scripts/start_server.sh --gpus 1 --cli
-
-# Check GPU setup first
-./scripts/start_server.sh --check-gpu
-```
-
-### 3. Start the Resume Parser API
-
-```bash
-# Start the FastAPI server
-python -m uvicorn src.api.server:app --host 0.0.0.0 --port 8000
-```
-
-### 4. Parse Your First Resume
-
-```bash
-# Using curl
-curl -X POST "http://localhost:8000/parse" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@path/to/your/resume.pdf"
-
-# Using Python
-import requests
-
-with open('resume.pdf', 'rb') as f:
-    response = requests.post(
-        'http://localhost:8000/parse',
-        files={'file': f}
-    )
-    result = response.json()
-    print(result)
-```
-
-## 📚 Usage Examples
-
-### Basic Resume Parsing
-
-```python
-from src.core.document_processor import ResumeDocumentProcessor
-
-# Initialize processor
-processor = ResumeDocumentProcessor()
-
-# Parse a resume
-result = processor.process_document("path/to/resume.pdf")
-
-# Access extracted information
-print(f"Name: {result['personal_info']['name']}")
-print(f"Email: {result['personal_info']['email']}")
-print(f"Skills: {result['skills']}")
-```
-
-### Advanced PDF Inference
-
-```python
-from src.core.pdf_inference import PDFInferenceEngine
-
-# Initialize PDF inference engine
-engine = PDFInferenceEngine()
-
-# Process PDF with advanced features
-result = engine.process_pdf(
-    "path/to/resume.pdf",
-    use_llm=True,
-    extract_code=True,
-    extract_tables=True
-)
-
-# Access enhanced information
-print(f"Technical Skills: {result['technical_skills']}")
-print(f"Code Blocks: {len(result['code_blocks'])}")
-print(f"Tables: {len(result['tables'])}")
-print(f"LLM Summary: {result['llm_summary']}")
-```
-
-### Using the LLM Enhancement
-
-```python
-from src.core.llm_client import ResumeLLMProcessor
-
-# Initialize LLM processor
-llm_processor = ResumeLLMProcessor()
-
-# Enhance extraction with LLM
-enhanced_result = llm_processor.enhance_extraction(result)
-
-# Get LLM-generated summary
-summary = llm_processor.summarize_resume(result['raw_text'])
-
-# Extract key achievements
-achievements = llm_processor.extract_key_achievements(result['raw_text'])
-```
-
-### Batch Processing
-
-```python
-# Process multiple resumes
-resumes = ["resume1.pdf", "resume2.docx", "resume3.txt"]
-results = []
-
-for resume in resumes:
-    result = processor.process_document(resume)
-    results.append(result)
-```
-
-## 🌐 API Endpoints
-
-### Parse Single Resume
-
-```http
-POST /parse
-Content-Type: multipart/form-data
-
-Parameters:
-- file: Resume file (PDF, DOCX, TXT)
-- use_llm: Boolean (default: true)
-
-Response:
-{
-  "personal_info": {...},
-  "education": [...],
-  "experience": [...],
-  "skills": [...],
-  "summary": "...",
-  "llm_summary": "...",
-  "key_achievements": [...]
-}
-```
-
-### Batch Processing
-
-```http
-POST /parse/batch
-Content-Type: multipart/form-data
-
-Parameters:
-- files: Multiple resume files
-- use_llm: Boolean (default: true)
-
-Response:
-{
-  "results": [...],
-  "summary": {...}
-}
-```
-
-### Extract Specific Information
-
-```http
-POST /extract/specific
-Content-Type: multipart/form-data
-
-Parameters:
-- file: Resume file
-- info_type: "skills", "experience", "education", etc.
-
-Response:
-{
-  "extracted_info": [...]
-}
-```
-
-### Health Check
-
-```http
-GET /health
-
-Response:
-{
-  "status": "healthy",
-  "vllm_available": true
-}
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MODEL_NAME` | `Qwen/Qwen3-8B` | LLM model to use |
-| `TENSOR_PARALLEL_SIZE` | `2` | Number of GPUs |
-| `MAX_MODEL_LEN` | `32768` | Maximum sequence length |
-| `GPU_MEMORY_UTILIZATION` | `0.8` | GPU memory usage |
-| `HOST` | `0.0.0.0` | API server host |
-| `PORT` | `8000` | API server port |
-
-### Supported File Formats
-
-- **PDF**: Native text and OCR for scanned documents
-- **DOCX**: Microsoft Word documents
-- **TXT**: Plain text files
-
-## 🔧 Advanced Usage
-
-### Custom GPU Configuration
-
-```bash
-# Use specific GPU devices
-./scripts/start_server.sh --gpu-devices '1,0' --cli
-
-# Adjust memory utilization
-./scripts/start_server.sh --gpu-memory-utilization 0.7 --cli
-
-# Use different model
-./scripts/start_server.sh --model Qwen/Qwen3-30B-A3B-Instruct-2507 --cli
-```
-
-### Production Deployment
-
-```bash
-# Run in background
-nohup ./scripts/start_server.sh --cli > vllm.log 2>&1 &
-nohup uvicorn src.api.server:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
-
-# With reverse proxy (nginx)
-# Configure nginx to proxy requests to localhost:8000
-```
-
-### Docker Deployment
-
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-EXPOSE 8000
-
-CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-## 📊 Performance Optimization
-
-### GPU Memory Management
-
-- **Single GPU**: Use `--gpus 1` for smaller models
-- **Multi-GPU**: Use `--gpus 2` or more for better throughput
-- **Memory Utilization**: Adjust based on available VRAM
-
-### Batch Size Optimization
-
-The system automatically adjusts batch sizes:
-- **Single GPU**: `max_num_batched_tokens=4096`
-- **Multi-GPU**: `max_num_batched_tokens=8192`
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **CUDA Out of Memory**
-   ```bash
-   # Reduce GPU memory utilization
-   ./scripts/start_server.sh --gpu-memory-utilization 0.5 --cli
-   ```
-
-2. **vLLM Not Found**
-   ```bash
-   pip install vllm
-   python scripts/test_setup.py
-   ```
-
-3. **Document Processing Errors**
-   ```bash
-   # Check file format support
-   # Ensure file is not corrupted
-   # Verify OCR dependencies (tesseract)
-   ```
-
-4. **API Connection Issues**
-   ```bash
-   # Check if servers are running
-   curl http://localhost:8000/health
-   curl http://localhost:8000/vllm/status
-   ```
+## 🛠️ Tech Stack
 
 ## 📁 Project Structure
 
 ```
 Resume-extraction/
+├── data/
+│   ├── GT/                           # Ground truth files (ID_gt.json)
+│   ├── INFORMATION-TECHNOLOGY/       # Original PDF dataset
+│   ├── Resume/                       # CSV data with resume information
+│   └── SCAN-INFORMATION-TECHNOLOGY/  # Converted scanned PDFs
+├── evaluate/
+│   ├── run_evaluation.py            # Combined evaluation pipeline
+│   ├── create_gt.py                 # Ground truth creation from CSV
+│   ├── evaluate.py                  # Basic evaluation
+│   ├── comprehensive_eval.py        # Comprehensive evaluation
+│   └── summary.py                   # Evaluation summary
+├── outputs/                         # JSON output files from processing
+├── results/                         # Evaluation results and metrics
 ├── src/
-│   ├── core/
-│   │   ├── document_processor.py  # Document processing with DocLing
-│   │   ├── client.py              # LLM integration with vLLM
-│   │   ├── pdf_inference.py       # Advanced PDF processing
-│   │   └── config.py              # Configuration management
-│   ├── api/
-│   │   └── server.py              # FastAPI REST server
-│   └── utils/                     # Utility functions
-├── scripts/
-│   ├── start_server.sh            # vLLM server startup
-│   ├── main.py                    # CLI interface
-│   ├── pdf_inference_demo.py      # PDF inference demo
-│   └── test_setup.py             # Installation verification
-├── tests/                         # Test suite
-├── docs/                          # Documentation
-└── requirements.txt               # Dependencies
+│   ├── core/                       # Core processing modules
+│   ├── api/                        # API server components
+│   └── utils/                      # Utility functions
+├── datasets/                       # Dataset processing scripts
+├── scripts/                        # Shell scripts for automation
+└── tests/                         # Test suites
+```
+
+## 🛠️ Installation
+
+### Prerequisites
+
+- Python 3.8+
+- CUDA-compatible GPU (for local VLM models)
+- 16GB+ RAM (for large models)
+
+### Setup
+
+1. **Clone and Install Dependencies**:
+```bash
+git clone <repository-url>
+cd Resume-extraction
+pip install -r requirements.txt
+```
+
+2. **Environment Configuration**:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+3. **Choose LLM Configuration**:
+
+**Option A: Local vLLM (Recommended for Production)**
+```bash
+# .env configuration
+LLM_BASE_URL=http://localhost:8000/v1
+LLM_MODEL=Qwen/Qwen3-8B
+LLM_API_KEY=
+DOCLING_USE_OCR=true
+```
+
+**Option B: OpenAI API (Easy Setup)**
+```bash
+# .env configuration
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-your-key-here
+DOCLING_USE_OCR=true
+```
+
+**Option C: Anthropic Claude (High Quality)**
+```bash
+# .env configuration
+LLM_BASE_URL=https://api.anthropic.com/v1
+LLM_MODEL=claude-3-5-sonnet-20241022
+LLM_API_KEY=sk-ant-your-key-here
+DOCLING_USE_OCR=true
+```
+
+## 🚀 Usage
+
+### 1. Start LLM Server (Local Mode)
+
+**For vLLM (Recommended)**:
+```bash
+# Start vLLM server
+python src/api/vllm_server.py --model Qwen/Qwen3-8B --tensor-parallel-size 1
+
+# Or use CLI
+vllm serve Qwen/Qwen3-8B --host 0.0.0.0 --port 8000
+```
+
+### 2. Process Resumes
+
+**Single File Processing**:
+```bash
+python scripts/run_demo.sh path/to/pdf_resume -o path/to/output
+```
+
+**Scrips Processing**:
+```bash
+python scripts/run_demo.sh path/to/resume_folder -o path/to/output_folder
+```
+
+**API Server**:
+```bash
+# Start API server
+python src/api/resume_extraction_server.py
+
+# Or use script
+./scripts/start_resume_server.sh
+```
+
+### 3. Dataset Management
+
+**Analyze PDF Dataset**:
+```bash
+cd datasets
+python dataset.py
+```
+
+**Convert PDFs to Scanned Format**:
+```bash
+cd datasets
+python convert_to_scanned.py
+```
+
+### 4. Evaluation Pipeline
+
+**Combined Evaluation (Recommended)**:
+```bash
+cd evaluate
+
+# Custom mode - direct evaluation with CSV data
+python run_evaluation.py --csv-path ../data/Resume/Resume.csv --outputs-dir ../outputs
+
+# Standard mode - uses existing evaluation scripts
+python run_evaluation.py --mode standard
+
+# With custom paths
+python run_evaluation.py --csv-path /path/to/resumes.csv --outputs-dir /path/to/outputs --mode custom
+```
+
+**Individual Evaluation Steps**:
+```bash
+cd evaluate
+
+# Create ground truth from CSV
+python create_gt.py
+
+# Basic evaluation
+python evaluate.py
+
+# Comprehensive evaluation
+python comprehensive_eval.py
+
+# Generate summary
+python summary.py
+```
+
+## 📊 Data Structure
+
+### Input Data Organization
+
+```
+data/
+├── GT/                           # Ground truth files
+│   ├── 16852973_gt.json        # Individual GT files by ID
+│   ├── 10265057_gt.json
+│   └── ...
+├── INFORMATION-TECHNOLOGY/       # Original PDF dataset
+│   ├── resume1.pdf
+│   ├── resume2.pdf
+│   └── ...
+├── Resume/                       # CSV data
+│   └── Resume.csv               # ID, Resume_str, Resume_html, Category
+└── SCAN-INFORMATION-TECHNOLOGY/  # Converted scanned PDFs
+    ├── resume1_scan.pdf
+    ├── resume2_scan.pdf
+    └── ...
+```
+
+### Output Structure
+
+```
+outputs/                          # Processing results
+├── 16852973.json               # JSON output by ID
+├── 10265057.json
+└── ...
+
+results/                          # Evaluation results
+├── ground_truth.json           # Main ground truth
+├── evaluation_results.json      # Basic evaluation
+├── comprehensive_evaluation_results.json
+├── custom_evaluation_results.json
+└── results_index.json
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LLM_BASE_URL` | LLM service URL | `http://localhost:8000/v1` |
+| `LLM_MODEL` | Model name | `Qwen/Qwen3-8B` |
+| `LLM_API_KEY` | API key (optional for vLLM) | - |
+| `LLM_MAX_TOKENS` | Maximum tokens | `2048` |
+| `LLM_TEMPERATURE` | Generation temperature | `0.1` |
+| `DOCLING_USE_OCR` | Enable OCR processing | `true` |
+
+### Model Configuration Examples
+
+**Local vLLM Setup**:
+```bash
+# Install vLLM
+pip install vllm
+
+# Start server
+python src/api/vllm_server.py --model Qwen/Qwen3-8B --tensor-parallel-size 1
+```
+
+**OpenAI Setup**:
+```bash
+# Get API key from OpenAI
+export LLM_API_KEY=sk-your-key-here
+export LLM_BASE_URL=https://api.openai.com/v1
+export LLM_MODEL=gpt-4o-mini
+```
+
+## 📈 Evaluation Framework
+
+### Metrics
+
+- **Entity-Level Accuracy**: Exact/fuzzy matching for strings
+- **List-Level Metrics**: Precision, recall, F1-score for lists
+- **Overall Score**: Aggregated F1 across all fields
+- **Performance Tiers**: Excellent (≥80%), Good (60-79%), Fair (40-59%), Poor (<40%)
+
+### Evaluation Commands
+
+```bash
+# Quick evaluation
+python run_evaluation.py --mode custom
+
+# Full evaluation pipeline
+python run_evaluation.py --mode standard
+
+# Custom paths
+python run_evaluation.py --csv-path data/Resume/Resume.csv --outputs-dir outputs
+```
+
+### Expected Performance
+
+- **Text PDFs**: >85% accuracy target
+- **Scanned PDFs**: >70% accuracy target (due to OCR errors)
+- **Field-specific**: Name, email, phone should achieve >90% accuracy
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+python tests/run_tests.py
+
+# Run specific test
+python tests/test_llm_client.py
+
+# Test setup
+python tests/test_setup.py
+```
+
+## 🚀 Deployment
+
+### Production Setup
+
+1. **Start vLLM Server**:
+```bash
+python src/api/vllm_server.py --model Qwen/Qwen3-8B --tensor-parallel-size 2
+```
+
+2. **Start API Server**:
+```bash
+python src/api/resume_extraction_server.py
+```
+
+3. **Monitor Performance**:
+```bash
+# Check server health
+curl http://localhost:8001/health
+
+# Process resume via API
+curl -X POST http://localhost:8001/extract \
+  -F "file=@resume.pdf" \
+  -F "save_output=true"
+```
+
+### Docker Deployment
+
+```bash
+# Build image
+docker build -t resume-parser .
+
+# Run container
+docker run -p 8001:8001 -p 8000:8000 resume-parser
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **CUDA Out of Memory**:
+   - Reduce `tensor_parallel_size`
+   - Lower `gpu_memory_utilization`
+   - Use smaller model
+
+2. **vLLM Server Not Starting**:
+   - Check CUDA installation
+   - Verify model path
+   - Check port availability
+
+3. **Evaluation Errors**:
+   - Ensure ground truth files exist in `data/GT/`
+   - Verify CSV format matches expected structure
+   - Check file permissions
+
+4. **OCR Processing Issues**:
+   - Install PyTorch with CUDA support
+   - Check SmolDocLing model availability
+   - Verify image processing libraries
+
+### Performance Optimization
+
+- **GPU Memory**: Use `--gpu-memory-utilization 0.8`
+- **Batch Processing**: Process multiple files simultaneously
+- **Model Selection**: Choose appropriate model size for your hardware
+- **Caching**: Enable model caching for repeated requests
+
+## 📚 API Documentation
+
+### Endpoints
+
+- `GET /`: Root endpoint with service info
+- `GET /health`: Health check
+- `POST /extract`: Extract entities from single resume
+- `POST /extract/batch`: Process multiple resumes
+- `POST /extract/specific`: Extract specific field
+- `GET /status`: Detailed system status
+
+### Example Usage
+
+```bash
+# Single file extraction
+curl -X POST http://localhost:8001/extract \
+  -F "file=@resume.pdf" \
+  -F "save_output=true"
+
+# Batch processing
+curl -X POST http://localhost:8001/extract/batch \
+  -F "files=@resume1.pdf" \
+  -F "files=@resume2.pdf" \
+  -F "save_outputs=true"
 ```
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+2. Create feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit pull request
 
 ## 📄 License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## 🙏 Acknowledgments
 
-For issues and questions:
-1. Check the troubleshooting section
-2. Review GPU memory requirements
-3. Verify vLLM installation
-4. Check system logs for detailed error messages
-
-## 🔗 Related Projects
-
-- [DocLing](https://github.com/docling-ai/docling) - Document processing library
-- [vLLM](https://github.com/vllm-project/vllm) - High-performance LLM inference
-- [Qwen](https://github.com/QwenLM/Qwen) - Large language models 
+- **DocLing**: Document parsing and structure extraction
+- **SmolDocLing**: Vision-language model for OCR
+- **vLLM**: High-performance LLM serving
+- **Qwen**: Base language model for information extraction 

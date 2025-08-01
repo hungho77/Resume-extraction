@@ -261,20 +261,6 @@ def main():
     parser = argparse.ArgumentParser(
         description="PDF to JSON Processing Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Process single PDF file
-  python pdf_inference_demo.py docs/examples_resume.pdf -o output.json
-  
-  # Process single PDF file (auto-generate output filename)
-  python pdf_inference_demo.py docs/examples_resume.pdf
-  
-  # Batch process all PDFs in directory
-  python pdf_inference_demo.py docs/ -o output_directory/
-  
-  # Batch process with auto-generated output files
-  python pdf_inference_demo.py docs/
-        """,
     )
 
     parser.add_argument("input", help="PDF file or directory to process")

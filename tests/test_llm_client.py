@@ -32,11 +32,6 @@ def test_llm_client():
             response = vllm_client.generate(prompt, max_tokens=50)
             print(f"📝 Generation test: {response[:100]}...")
 
-            # Test specific extraction
-            text = "John Doe is a software engineer with 5 years of experience in Python and JavaScript."
-            skills = vllm_client.extract_specific_info(text, "skills")
-            print(f"💻 Skills extraction: {skills}")
-
         return health
     except Exception as e:
         print(f"❌ vLLM client error: {e}")
@@ -60,11 +55,6 @@ def test_openai_client():
             prompt = "Hello, how are you?"
             response = openai_client.generate(prompt, max_tokens=50)
             print(f"📝 Generation test: {response[:100]}...")
-
-            # Test specific extraction
-            text = "John Doe is a software engineer with 5 years of experience in Python and JavaScript."
-            skills = openai_client.extract_specific_info(text, "skills")
-            print(f"💻 Skills extraction: {skills}")
 
         return health
     except Exception as e:

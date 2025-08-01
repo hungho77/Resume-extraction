@@ -3,11 +3,12 @@ import re
 from typing import Dict, List, Any
 from pathlib import Path
 import logging
+from datetime import datetime
 
 from docling.document_converter import DocumentConverter
 
 from .config import docling_config
-from .client import SmolDocLingClient, LLMClient, ResumeProcessor
+from .client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,19 @@ class ResumeDocumentProcessor:
     def __init__(self):
         self.converter = DocumentConverter()
         self.use_ocr = docling_config.use_ocr
-        self.ocr_language = docling_config.ocr_language
 
         # Initialize specialized clients
-        self.smoldocling_client = SmolDocLingClient()
-        self.llm_client = LLMClient()
-        self.resume_processor = ResumeProcessor()
+        if self.use_ocr:
+            from .client import SmolDocLingClient
 
-        logger.info("ResumeDocumentProcessor initialized with specialized clients")
+            self.smoldocling_client = SmolDocLingClient()
+        else:
+            self.smoldocling_client = None
+        self.llm_client = LLMClient()
+
+        logger.info(
+            f"ResumeDocumentProcessor initialized with OCR enabled: {self.use_ocr}"
+        )
 
     def extract_text_from_pdf(self, file_path: str) -> tuple[str, bool]:
         """Extract text from PDF using DocLing with SmolDocLing VLM OCR fallback"""
@@ -47,6 +53,10 @@ class ResumeDocumentProcessor:
                     text = conversion_result.document.export_to_markdown()
                     logger.info("DocLing markdown export successful")
                     logger.debug(f"Markdown content preview: {text[:200]}...")
+
+                    # Save markdown to file for debugging
+                    self._save_markdown_debug(file_path, text)
+
                 except Exception as e:
                     logger.warning(
                         f"DocLing markdown export failed: {e}, falling back to text extraction"
@@ -81,16 +91,45 @@ class ResumeDocumentProcessor:
             text = ""
 
         # If DocLing failed or returned empty text, try SmolDocLing VLM OCR
-        if not text.strip():
+        if not text.strip() and self.smoldocling_client is not None:
             logger.info("DocLing returned empty text, trying SmolDocLing VLM OCR...")
             text = self.smoldocling_client.extract_text_from_pdf(file_path)
             if text:
                 logger.info("SmolDocLing VLM OCR extraction successful")
                 used_smoldocling = True
             else:
-                logger.error("All PDF extraction methods failed")
+                logger.error("SmolDocLing VLM OCR extraction failed")
+        elif not text.strip():
+            logger.error("DocLing failed and OCR is disabled - no text extracted")
 
         return text.strip(), used_smoldocling
+
+    def _save_markdown_debug(self, file_path: str, markdown_content: str) -> None:
+        """Save DocLing markdown output to file for debugging"""
+        try:
+            # Create markdowns directory outside of src
+            markdowns_dir = Path(__file__).parent.parent.parent / "markdowns"
+            markdowns_dir.mkdir(exist_ok=True)
+
+            # Generate filename based on original file
+            original_filename = Path(file_path).stem
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            debug_filename = f"{original_filename}_{timestamp}_docling.md"
+            debug_file_path = markdowns_dir / debug_filename
+
+            # Save markdown content
+            with open(debug_file_path, "w", encoding="utf-8") as f:
+                f.write("# DocLing Markdown Export Debug\n\n")
+                f.write(f"**Source File:** {file_path}\n")
+                f.write(f"**Export Time:** {datetime.now().isoformat()}\n")
+                f.write(f"**Content Length:** {len(markdown_content)} characters\n\n")
+                f.write("---\n\n")
+                f.write(markdown_content)
+
+            logger.info(f"Saved DocLing markdown debug to: {debug_file_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to save markdown debug file: {e}")
 
     def extract_text(self, file_path: str) -> tuple[str, bool]:
         """Extract text from PDF files using DocLing with markdown export"""
@@ -182,8 +221,9 @@ class ResumeDocumentProcessor:
                     else "docling_llm_extraction",
                     "is_markdown_format": is_markdown,
                     "ocr_enabled": self.use_ocr,
-                    "ocr_language": self.ocr_language,
-                    "smoldocling_available": self.smoldocling_client.health_check(),
+                    "smoldocling_available": self.smoldocling_client.health_check()
+                    if self.smoldocling_client is not None
+                    else False,
                     "llm_available": self.llm_client.health_check(),
                     "extracted_text_preview": processed_text[:500] + "..."
                     if len(processed_text) > 500

@@ -62,8 +62,8 @@ output/
 results/
 
 # Environment variables
-.env
-.env.local 
 
 # Data
 data/
+markdowns/
+outputs/
