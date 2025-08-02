@@ -136,7 +136,23 @@ PORT=8001
 
 ## 🧪 Usage Examples
 
-### 1. PDF Processing Demo
+### 1. Web Interface (Gradio Demo)
+
+```bash
+# Launch the web interface
+bash src/scripts/run_gradio_demo.sh
+
+# Then open your browser to: http://localhost:7860
+```
+
+Features:
+- 📄 Upload PDF resumes
+- ⚙️ Configure API settings (URL, API key, model)
+- 👁️ Toggle OCR for scanned documents
+- 📋 View extracted information
+- 📥 Download JSON results
+
+### 2. PDF Processing Demo
 
 ```bash
 # Single file processing

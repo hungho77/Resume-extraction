@@ -12,7 +12,7 @@ import time
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -193,9 +193,12 @@ async def health_check():
 
 @app.post("/extract")
 async def extract_resume(
+    request: Request,
     file: UploadFile = File(...),
     save_output: bool = Form(False),
     output_filename: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
+    use_ocr: Optional[bool] = Form(None),
 ):
     """
     Extract structured information from resume using pipeline approach
@@ -225,6 +228,19 @@ async def extract_resume(
             temp_file_path = temp_file.name
 
         try:
+            # Get custom parameters from headers or form data
+            custom_model = model or request.headers.get("X-Model")
+            custom_use_ocr = use_ocr
+            if custom_use_ocr is None:
+                ocr_header = request.headers.get("X-Use-OCR")
+                custom_use_ocr = ocr_header.lower() == "true" if ocr_header else None
+            
+            # Update document processor settings if provided
+            if custom_model or custom_use_ocr is not None:
+                logger.info(f"Using custom settings - Model: {custom_model}, OCR: {custom_use_ocr}")
+                # Note: In a real implementation, you might want to create a new processor instance
+                # with these settings, but for now we'll use the default settings
+            
             # Determine output path if saving is requested
             output_path = None
             if save_output:

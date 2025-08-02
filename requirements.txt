@@ -37,5 +37,8 @@ protobuf>=3.20.0
 # LLM providers
 openai>=1.0.0
 
+# Web interface
+gradio>=4.0.0
+
 # Environment configuration
 python-dotenv>=1.0.0 

@@ -67,3 +67,9 @@ results/
 data/
 markdowns/
 outputs/
+
+# Weights
+weights/
+
+# Gradio
+src/.gradio/
